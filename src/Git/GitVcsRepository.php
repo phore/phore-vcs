@@ -67,6 +67,7 @@ class GitVcsRepository implements VcsRepository
         $this->gitCommand("git -C :target push", ["target"=> $this->repoDirectory]);
     }
 
+
     public function getObjectstore(): ObjectStore
     {
         return new ObjectStore(new FileSystemObjectStoreDriver($this->repoDirectory));
