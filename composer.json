@@ -1,0 +1,34 @@
+{
+  "name": "phore/vcs",
+  "type": "library",
+  "license": "MIT",
+  "description": "Wrapper for git",
+  "authors": [
+    {
+      "name": "Matthias Leuffen",
+      "email": "leuffen@continue.de"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Phore\\VCS\\": "src/"
+    },
+    "files": [
+      "src/functions.php"
+    ]
+  },
+  "require": {
+    "php" : ">7.1",
+    "phore/system": "dev-master",
+    "ext-json": "*",
+    "ext-yaml": "*",
+    "phore/objectstore": "dev-master",
+    "phore/filesystem": "dev-master"
+  },
+  "require-dev": {
+    "phore/theme-coreui": "dev-master"
+  },
+  "suggest": {
+  },
+  "minimum-stability": "dev"
+}
