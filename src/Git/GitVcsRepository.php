@@ -23,6 +23,9 @@ class GitVcsRepository implements VcsRepository
     private $repoDirectory;
     private $origin;
     private $sshKey;
+    /**
+     * @var ObjectStore 
+     */
     private $objectStore;
 
     public function __construct(string $origin, string $repoDirectory, string $sshKey=null)
@@ -30,6 +33,7 @@ class GitVcsRepository implements VcsRepository
         $this->repoDirectory = phore_dir($repoDirectory);
         $this->origin = $origin;
         $this->sshKey = $sshKey;
+        $this->objectStore =  new ObjectStore(new FileSystemObjectStoreDriver($this->repoDirectory));
     }
 
     public function exists()
@@ -70,11 +74,11 @@ class GitVcsRepository implements VcsRepository
 
     public function getObjectstore(): ObjectStore
     {
-        return new ObjectStore(new FileSystemObjectStoreDriver($this->repoDirectory));
+        return $this->objectStore;
     }
 
     public function object(string $name): ObjectStoreObject
     {
-        // TODO: Implement object() method.
+        return $this->objectStore->object($name);
     }
 }
