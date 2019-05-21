@@ -30,7 +30,7 @@ class GitVcsRepository implements VcsRepository
 
     public function __construct(string $origin, string $repoDirectory, string $sshKey=null)
     {
-        $this->repoDirectory = phore_dir($repoDirectory);
+        $this->repoDirectory = phore_dir($repoDirectory)->assertDirectory(true);
         $this->origin = $origin;
         $this->sshKey = $sshKey;
         $this->objectStore =  new ObjectStore(new FileSystemObjectStoreDriver($this->repoDirectory));
@@ -51,6 +51,8 @@ class GitVcsRepository implements VcsRepository
         $cmd = "";
         if ($this->sshKey !== null) {
             $sshKeyFile = "/tmp/id_ssh-".sha1($this->repoDirectory);
+            touch($sshKeyFile);
+            chmod($sshKeyFile, 0600);
             file_put_contents($sshKeyFile, $this->sshKey);
             $cmd .= 'GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ' . $sshKeyFile . '" ';
         }
