@@ -51,7 +51,12 @@ class GitVcsRepository implements VcsRepository
         phore_assert_str_alnum($this->userName, [".", "-", "_"]);
         phore_assert_str_alnum($this->email, ["@", ".", "-", "_"]);
         $this->gitCommand("git -C :target add .", ["target"=> $this->repoDirectory]);
-        $this->gitCommand("git -C :target -c 'user.name={$this->userName}' -c 'user.email={$this->email}' commit -m :msg ", ["target"=> $this->repoDirectory, "msg"=>$message]);
+        
+        $ret = $this->gitCommand("git -C :target diff --name-only --cached", ["target" => $this->repoDirectory]);
+        // commit only if files changed.
+        if (trim ($ret) !== "") {
+            $this->gitCommand("git -C :target -c 'user.name={$this->userName}' -c 'user.email={$this->email}' commit -m :msg ", ["target" => $this->repoDirectory, "msg" => $message]);
+        }
     }
 
     private function gitCommand(string $command, array $params) {
