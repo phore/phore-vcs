@@ -16,12 +16,19 @@ class VcsFactory
 
     private $sshPrivKey;
 
+    private $commitUserName;
+    private $commitEmail;
 
     public function setAuthSshPrivateKey(string $privateKey)
     {
         $this->sshPrivKey = $privateKey;
     }
 
+    public function setCommitUser ($userName, $email)
+    {
+        $this->commitUserName = $userName;
+        $this->commitEmail = $email;
+    }
 
     /**
      *
