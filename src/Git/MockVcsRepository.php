@@ -9,6 +9,8 @@
 namespace Phore\VCS\Git;
 
 
+use Phore\FileSystem\PhoreFile;
+use Phore\FileSystem\PhoreUri;
 use Phore\ObjectStore\Driver\FileSystemObjectStoreDriver;
 use Phore\ObjectStore\ObjectStore;
 use Phore\ObjectStore\Type\ObjectStoreObject;
@@ -67,4 +69,22 @@ class MockVcsRepository implements VcsRepository
         return $this->objectStore->object($name);
     }
 
+    public function setSavepointFile($file)
+    {
+        // TODO: Implement setSavepointFile() method.
+    }
+
+    public function getChangedFiles(): array
+    {
+        $this->repoDirectory->walkR(function(PhoreUri $file) use (&$ret) {
+             if ($file instanceof PhoreFile)
+                 $ret[] = [(string)$file, self::STAT_CREATE];
+        });
+        return $ret;
+    }
+
+    public function saveSavepoint()
+    {
+        // TODO: Implement saveSavepoint() method.
+    }
 }

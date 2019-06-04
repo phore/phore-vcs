@@ -41,12 +41,12 @@ class GitVcsRepository implements VcsRepository
 
 
     const GIT_STATUS_MAP = [
-        "M" => self::F_MODIFY,
-        "A" => self::F_CREATE,
-        "D" => self::F_DELETE,
-        "C" => self::F_CREATE,
-        "R" => self::F_MOVED,
-        "T" => self::F_MODIFY
+        "M" => self::STAT_MODIFY,
+        "A" => self::STAT_CREATE,
+        "D" => self::STAT_DELETE,
+        "C" => self::STAT_CREATE,
+        "R" => self::STAT_MOVED,
+        "T" => self::STAT_MODIFY
     ];
 
 
