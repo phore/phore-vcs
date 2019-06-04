@@ -32,6 +32,8 @@ class GitVcsRepository implements VcsRepository
         $this->sshKey = $sshKey;
     }
 
+
+
     public function exists()
     {
         return $this->repoDirectory->withSubPath(".git")->isDirectory();
