@@ -17,8 +17,8 @@ class VcsFactory
 
     private $sshPrivKey;
 
-    private $commitUserName;
-    private $commitEmail;
+    private $commitUserName = "";
+    private $commitEmail = "";
 
     public function setAuthSshPrivateKey(string $privateKey)
     {
