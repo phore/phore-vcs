@@ -9,6 +9,7 @@
 namespace Phore\VCS\Git;
 
 
+use Phore\FileSystem\PhoreFile;
 use Phore\ObjectStore\Driver\FileSystemObjectStoreDriver;
 use Phore\ObjectStore\ObjectStore;
 use Phore\ObjectStore\Type\ObjectStoreObject;
@@ -31,6 +32,24 @@ class GitVcsRepository implements VcsRepository
      */
     private $objectStore;
 
+    /**
+     * @var PhoreFile
+     */
+    private $savepointFile = null;
+
+    private $currentPulledVersion = null;
+
+
+    const GIT_STATUS_MAP = [
+        "M" => self::F_MODIFY,
+        "A" => self::F_CREATE,
+        "D" => self::F_DELETE,
+        "C" => self::F_CREATE,
+        "R" => self::F_MOVED,
+        "T" => self::F_MODIFY
+    ];
+
+
     public function __construct(string $origin, string $repoDirectory, string $userName, string $email, string $sshKey=null)
     {
         $this->repoDirectory = phore_dir($repoDirectory)->assertDirectory(true);
@@ -42,6 +61,51 @@ class GitVcsRepository implements VcsRepository
     }
 
 
+    public function setSavepointFile($file)
+    {
+        if (is_string($file))
+            $file = phore_file($file);
+        $this->savepointFile = $file;
+    }
+
+
+    public function getChangedFiles() : array
+    {
+        if ($this->savepointFile === null)
+            throw new \InvalidArgumentException("No savepoint file specified. Use setSavepointFile() to select one.");
+
+        $lastRev = $this->savepointFile->get_contents();
+        if ($lastRev === "") {
+            $lastRev = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"; // <= This is git default for empty tree (before first commit)
+        }
+        if ($this->currentPulledVersion === null)
+            $this->currentPulledVersion = $this->gitCommand("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
+
+        $changedFiles = $this->gitCommand("git -C :target diff --name-status :lastRev..:curRev", [
+            "target" => $this->repoDirectory,
+            "lastRev" => $lastRev,
+            "curRev" => $this->currentPulledVersion
+        ]);
+
+        $changedFiles = explode("\n", $changedFiles);
+
+        $ret = [];
+        foreach ($changedFiles as $curLine) {
+            $curLine = trim ($curLine);
+            $skey = substr($curLine, 0, 1);
+            $status = isset (self::GIT_STATUS_MAP[$skey]) ? self::GIT_STATUS_MAP[$skey] : null;
+
+            if ($status === null)
+                continue;
+            $ret[] = [substr($curLine, 0, 1), trim (substr($curLine, 1))];
+        }
+        return $ret;
+    }
+
+    public function saveSavepoint()
+    {
+        $this->savepointFile->set_contents($this->currentPulledVersion);
+    }
 
     public function exists()
     {
@@ -80,6 +144,7 @@ class GitVcsRepository implements VcsRepository
             $this->gitCommand("git clone :origin :target", ["origin"=>$this->origin, "target"=>$this->repoDirectory]);
         }
         $this->gitCommand("git -C :target pull -Xtheirs", ["target"=> $this->repoDirectory]);
+        $this->currentPulledVersion = $this->gitCommand("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
     }
 
     public function push()
