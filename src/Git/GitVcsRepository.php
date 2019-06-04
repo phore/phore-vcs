@@ -58,6 +58,11 @@ class GitVcsRepository implements VcsRepository
         $this->userName = $userName;
         $this->email = $email;
         $this->objectStore =  new ObjectStore(new FileSystemObjectStoreDriver($this->repoDirectory));
+        if ($this->repoDirectory->withSubPath(".git")->isDirectory()) {
+            $savepoint = $this->savepointFile = $this->repoDirectory->withSubPath(".git")->assertDirectory()->withSubPath("phore_savepoint")->asFile();
+            if ( ! $savepoint->isFile())
+                $savepoint->set_contents("");
+        }
     }
 
 
