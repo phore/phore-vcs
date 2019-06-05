@@ -9,6 +9,7 @@
 namespace Phore\VCS;
 
 
+use Phore\FileSystem\PhoreTempFile;
 use Phore\VCS\Git\GitVcsRepository;
 use Phore\VCS\Git\MockVcsRepository;
 
@@ -31,6 +32,13 @@ class VcsFactory
         $this->commitEmail = $email;
     }
 
+    public function createSshPublicKey() : string
+    {
+        $tmpfile = new PhoreTempFile();
+        $tmpfile->set_contents($this->sshPrivKey);
+        return phore_exec("ssh-keygen -y -f :file", ["file" => $tmpfile->getUri()]);
+    }
+    
     /**
      *
      * Note: public repositories need clone in http-mode if no ssh key is available.
