@@ -50,7 +50,7 @@ class MockVcsRepository implements VcsRepository
     {
         if ($this->exists())
             $this->repoDirectory->mkdir();
-        phore_exec("rsync -a :origin :target", ["origin" => $this->origin . "/", "target" => $this->repoDirectory->getUri() . "/"]);
+        phore_exec("rsync -a :origin :target --delete", ["origin" => $this->origin . "/", "target" => $this->repoDirectory->getUri() . "/"]);
     }
 
     public function push()
