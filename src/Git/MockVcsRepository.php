@@ -48,7 +48,7 @@ class MockVcsRepository implements VcsRepository
 
     public function pull()
     {
-        if ($this->exists())
+        if ( ! $this->exists())
             $this->repoDirectory->mkdir();
         phore_exec("rsync -a :origin :target --delete", ["origin" => $this->origin . "/", "target" => $this->repoDirectory->getUri() . "/"]);
     }
