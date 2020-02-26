@@ -58,7 +58,7 @@ class VcsFactory
         if (preg_match("/^[a-z0-9_\-]+@[a-z0-9\-\.]+\:.*$/", $repoUrl)) {
             return new GitVcsRepository($repoUrl, $targetPath, $this->commitUserName, $this->commitEmail, $this->sshPrivKey);
         }
-        if (preg_match("/^http.*\.git$/", $repoUrl)) {
+        if (preg_match("/^http.*$/", $repoUrl)) {
             return new GitVcsRepository($repoUrl, $targetPath, $this->commitUserName, $this->commitEmail, $this->sshPrivKey);
         }
         throw new \InvalidArgumentException("Cannot determine repository type: $repoUrl");
