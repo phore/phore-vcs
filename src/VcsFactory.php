@@ -38,7 +38,7 @@ class VcsFactory
         $tmpfile->set_contents($this->sshPrivKey);
         return phore_exec("ssh-keygen -y -f :file", ["file" => $tmpfile->getUri()]);
     }
-    
+
     /**
      *
      * Note: public repositories need clone in http-mode if no ssh key is available.
@@ -55,7 +55,7 @@ class VcsFactory
             }
             return new MockVcsRepository($matches[1], $targetPath);
         }
-        if (preg_match("/^[a-z0-9_\-]+@[a-z0-9\-\.]+\:.*\.git$/", $repoUrl)) {
+        if (preg_match("/^[a-z0-9_\-]+@[a-z0-9\-\.\%]+\:.*\.git$/", $repoUrl)) {
             return new GitVcsRepository($repoUrl, $targetPath, $this->commitUserName, $this->commitEmail, $this->sshPrivKey);
         }
         if (preg_match("/^http.*\.git$/", $repoUrl)) {
