@@ -9,60 +9,21 @@
 namespace Phore\VCS\Git;
 
 
-use Phore\FileSystem\PhoreFile;
-use Phore\ObjectStore\Driver\FileSystemObjectStoreDriver;
 use Phore\ObjectStore\ObjectStore;
 use Phore\ObjectStore\Type\ObjectStoreObject;
-use Phore\VCS\VcsRepository;
 
-class GitVcsRepository implements VcsRepository
+class SshGitRepository extends GitRepository
 {
 
-    /**
-     * @var \Phore\FileSystem\PhoreDirectory
-     */
-    private $repoDirectory;
-    private $origin;
     private $sshKey;
-    
-    private $userName;
-    private $email;
-    /**
-     * @var ObjectStore 
-     */
-    private $objectStore;
-
-    /**
-     * @var PhoreFile
-     */
-    private $savepointFile = null;
-
-    private $currentPulledVersion = null;
 
 
-    const GIT_STATUS_MAP = [
-        "M" => self::STAT_MODIFY,
-        "A" => self::STAT_CREATE,
-        "D" => self::STAT_DELETE,
-        "C" => self::STAT_CREATE,
-        "R" => self::STAT_MOVED,
-        "T" => self::STAT_MODIFY
-    ];
 
 
-    public function __construct(string $origin, string $repoDirectory, string $userName, string $email, string $sshKey=null)
+    public function __construct(string $origin, string $repoDirectory, string $userName, string $email, string $sshKey = null)
     {
-        $this->repoDirectory = phore_dir($repoDirectory)->assertDirectory(true);
-        $this->origin = $origin;
+        parent::__construct($repoDirectory,$userName,$email, $origin);
         $this->sshKey = $sshKey;
-        $this->userName = $userName;
-        $this->email = $email;
-        $this->objectStore =  new ObjectStore(new FileSystemObjectStoreDriver($this->repoDirectory));
-        if ($this->repoDirectory->withSubPath(".git")->isDirectory()) {
-            $savepoint = $this->savepointFile = $this->repoDirectory->withSubPath(".git")->assertDirectory()->withSubPath("phore_savepoint")->asFile();
-            if ( ! $savepoint->isFile())
-                $savepoint->set_contents("");
-        }
     }
 
 
@@ -74,7 +35,7 @@ class GitVcsRepository implements VcsRepository
     }
 
 
-    public function getChangedFiles() : array
+    public function getChangedFiles(): array
     {
         if ($this->savepointFile === null)
             throw new \InvalidArgumentException("No savepoint file specified. Use setSavepointFile() to select one.");
@@ -96,13 +57,13 @@ class GitVcsRepository implements VcsRepository
 
         $ret = [];
         foreach ($changedFiles as $curLine) {
-            $curLine = trim ($curLine);
+            $curLine = trim($curLine);
             $skey = substr($curLine, 0, 1);
             $status = isset (self::GIT_STATUS_MAP[$skey]) ? self::GIT_STATUS_MAP[$skey] : null;
 
             if ($status === null)
                 continue;
-            $ret[] = [substr($curLine, 0, 1), trim (substr($curLine, 1))];
+            $ret[] = [substr($curLine, 0, 1), trim(substr($curLine, 1))];
         }
         return $ret;
     }
@@ -121,19 +82,20 @@ class GitVcsRepository implements VcsRepository
     {
         phore_assert_str_alnum($this->userName, [".", "-", "_"]);
         phore_assert_str_alnum($this->email, ["@", ".", "-", "_"]);
-        $this->gitCommand("git -C :target add .", ["target"=> $this->repoDirectory]);
-        
+        $this->gitCommand("git -C :target add .", ["target" => $this->repoDirectory]);
+
         $ret = $this->gitCommand("git -C :target diff --name-only --cached", ["target" => $this->repoDirectory]);
         // commit only if files changed.
-        if (trim ($ret) !== "") {
+        if (trim($ret) !== "") {
             $this->gitCommand("git -C :target -c 'user.name={$this->userName}' -c 'user.email={$this->email}' commit -m :msg ", ["target" => $this->repoDirectory, "msg" => $message]);
         }
     }
 
-    private function gitCommand(string $command, array $params) {
+    private function gitCommand(string $command, array $params)
+    {
         $cmd = "";
         if ($this->sshKey !== null) {
-            $sshKeyFile = "/tmp/id_ssh-".sha1($this->repoDirectory);
+            $sshKeyFile = "/tmp/id_ssh-" . sha1($this->repoDirectory);
             touch($sshKeyFile);
             chmod($sshKeyFile, 0600);
             file_put_contents($sshKeyFile, $this->sshKey);
@@ -145,16 +107,16 @@ class GitVcsRepository implements VcsRepository
 
     public function pull()
     {
-        if ( ! $this->exists()) {
-            $this->gitCommand("git clone :origin :target", ["origin"=>$this->origin, "target"=>$this->repoDirectory]);
+        if (!$this->exists()) {
+            $this->gitCommand("git clone :origin :target", ["origin" => $this->origin, "target" => $this->repoDirectory]);
         }
-        $this->gitCommand("git -C :target pull -Xtheirs", ["target"=> $this->repoDirectory]);
+        $this->gitCommand("git -C :target pull -Xtheirs", ["target" => $this->repoDirectory]);
         $this->currentPulledVersion = $this->gitCommand("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
     }
 
     public function push()
     {
-        $this->gitCommand("git -C :target push", ["target"=> $this->repoDirectory]);
+        $this->gitCommand("git -C :target push", ["target" => $this->repoDirectory]);
     }
 
 

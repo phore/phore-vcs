@@ -33,8 +33,6 @@ interface VcsRepository
 
     public function object(string $name) : ObjectStoreObject;
 
-
-
     public function setSavepointFile($file);
 
 

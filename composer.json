@@ -17,7 +17,7 @@
     ]
   },
   "require": {
-    "php" : ">7.1",
+    "php" : "7.2",
     "phore/system": "dev-master",
     "ext-json": "*",
     "ext-yaml": "*",
@@ -25,7 +25,8 @@
     "phore/filesystem": "dev-master"
   },
   "require-dev": {
-    "phore/theme-coreui": "dev-master"
+    "phore/theme-coreui": "dev-master",
+    "phpunit/phpunit": "^7"
   },
   "suggest": {
   },

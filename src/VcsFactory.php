@@ -10,8 +10,8 @@ namespace Phore\VCS;
 
 
 use Phore\FileSystem\PhoreTempFile;
-use Phore\VCS\Git\GitVcsRepository;
 use Phore\VCS\Git\MockVcsRepository;
+use Phore\VCS\Git\SshGitRepository;
 
 class VcsFactory
 {
@@ -26,13 +26,13 @@ class VcsFactory
         $this->sshPrivKey = $privateKey;
     }
 
-    public function setCommitUser ($userName, $email)
+    public function setCommitUser($userName, $email)
     {
         $this->commitUserName = $userName;
         $this->commitEmail = $email;
     }
 
-    public function createSshPublicKey() : string
+    public function createSshPublicKey(): string
     {
         $tmpfile = new PhoreTempFile();
         $tmpfile->set_contents($this->sshPrivKey);
@@ -47,19 +47,19 @@ class VcsFactory
      * @param string $repoUrl
      * @return VcsRepository
      */
-    public function repository(string $targetPath, string $repoUrl) : VcsRepository
+    public function repository(string $targetPath, string $repoUrl): VcsRepository
     {
         if (preg_match("/^mock\@(.*)$/", $repoUrl, $matches)) {
-            if ( ! DEV_MODE) {
+            if (!DEV_MODE) {
                 throw new \InvalidArgumentException("Mock repositorys '$repoUrl' are allowed only in dev-mode");
             }
             return new MockVcsRepository($matches[1], $targetPath);
         }
         if (preg_match("/^[a-z0-9_\-]+@[a-z0-9\-\.]+\:.*$/", $repoUrl)) {
-            return new GitVcsRepository($repoUrl, $targetPath, $this->commitUserName, $this->commitEmail, $this->sshPrivKey);
+            return new SshGitRepository($repoUrl, $targetPath, $this->commitUserName, $this->commitEmail, $this->sshPrivKey);
         }
         if (preg_match("/^http.*$/", $repoUrl)) {
-            return new GitVcsRepository($repoUrl, $targetPath, $this->commitUserName, $this->commitEmail, $this->sshPrivKey);
+            return new SshGitRepository($repoUrl, $targetPath, $this->commitUserName, $this->commitEmail, $this->sshPrivKey);
         }
         throw new \InvalidArgumentException("Cannot determine repository type: $repoUrl");
     }
