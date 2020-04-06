@@ -45,7 +45,7 @@ class VcsFactory
         return phore_exec("ssh-keygen -y -f :file", ["file" => $tmpfile->getUri()]);
     }
 
-    public function setGitUserAuth(string $gitUser, string $gitPassword)
+    public function setGitHttpsAuth(string $gitUser, string $gitPassword)
     {
         $this->gitUser = $gitUser;
         $this->gitPassword = $gitPassword;
