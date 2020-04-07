@@ -15,6 +15,7 @@ use Phore\FileSystem\Exception\FileAccessException;
 use Phore\FileSystem\Exception\FileNotFoundException;
 use Phore\FileSystem\Exception\FilesystemException;
 use Phore\FileSystem\Exception\PathOutOfBoundsException;
+use Phore\FileSystem\PhoreDirectory;
 use Phore\System\PhoreExecException;
 
 /**
@@ -25,10 +26,9 @@ class SshGitRepository extends GitRepository
 {
 
     /**
-     * @var string
+     * @var PhoreDirectory
      */
-    private $sshKey;
-
+    protected $sshKey;
 
     /**
      * SshGitRepository constructor.
@@ -42,7 +42,7 @@ class SshGitRepository extends GitRepository
      */
     public function __construct(string $origin, string $repoDirectory, string $userName, string $email, string $sshKey = null)
     {
-        parent::__construct($repoDirectory, $userName, $email, $origin);
+        parent::__construct($origin, $repoDirectory, $userName, $email);
         $this->sshKey = $sshKey;
     }
 
@@ -75,23 +75,6 @@ class SshGitRepository extends GitRepository
     }
 
     /**
-     * @throws FilesystemException
-     */
-    public function saveSavepoint()
-    {
-        $this->savepointFile->set_contents($this->currentPulledVersion);
-    }
-
-    /**
-     * @return bool
-     * @throws PathOutOfBoundsException
-     */
-    public function exists()
-    {
-        return $this->repoDirectory->withSubPath(".git")->isDirectory();
-    }
-
-    /**
      * @param string $message
      * @throws InvalidDataException
      * @throws PhoreExecException
@@ -115,7 +98,7 @@ class SshGitRepository extends GitRepository
      * @return array|string
      * @throws PhoreExecException
      */
-    private function gitCommand(string $command, array $params)
+    protected function gitCommand(string $command, array $params)
     {
         $cmd = "";
         if ($this->sshKey !== null) {
