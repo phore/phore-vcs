@@ -37,7 +37,7 @@ class HttpsGitRepository extends GitRepository
     {
         $this->gitPassword = $gitPassword;
         $origin = substr_replace($origin, "https://$gitUser:$gitPassword@", 0, 8);
-        parent::__construct($repoDirectory, $userName, $email, $origin);
+        parent::__construct($origin, $repoDirectory, $userName, $email);
     }
 
 
