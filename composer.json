@@ -17,7 +17,7 @@
     ]
   },
   "require": {
-    "php" : "7.2",
+    "php" : ">=7.2",
     "phore/system": "dev-master",
     "ext-json": "*",
     "ext-yaml": "*",

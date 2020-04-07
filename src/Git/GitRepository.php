@@ -78,10 +78,6 @@ abstract class GitRepository implements VcsRepository
         return $this->repoDirectory->withSubPath(".git")->isDirectory();
     }
 
-    public function commit(string $message)
-    {
-    }
-
     public function getObjectstore(): ObjectStore
     {
         return $this->objectStore;

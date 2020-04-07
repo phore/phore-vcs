@@ -8,10 +8,11 @@ use Phore\FileSystem\Exception\FilesystemException;
 use Phore\FileSystem\Exception\PathOutOfBoundsException;
 use Phore\ObjectStore\ObjectStore;
 use Phore\ObjectStore\Type\ObjectStoreObject;
+use Phore\System\PhoreExecException;
 
 class HttpsGitRepository extends GitRepository
 {
-
+//todo catch password in exception (mask)
     /**
      * HttpsGitRepository constructor.
      * @param string $origin
@@ -42,6 +43,7 @@ class HttpsGitRepository extends GitRepository
     /**
      * @param string $message
      * @throws InvalidDataException
+     * @throws PhoreExecException
      */
     public function commit(string $message)
     {
