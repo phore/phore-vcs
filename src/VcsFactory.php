@@ -13,31 +13,63 @@ use InvalidArgumentException;
 use Phore\FileSystem\Exception\FilesystemException;
 use Phore\FileSystem\Exception\PathOutOfBoundsException;
 use Phore\FileSystem\PhoreTempFile;
+use Phore\System\PhoreExecException;
 use Phore\VCS\Git\HttpsGitRepository;
 use Phore\VCS\Git\MockVcsRepository;
 use Phore\VCS\Git\SshGitRepository;
 
+/**
+ * Class VcsFactory
+ * @package Phore\VCS
+ */
 class VcsFactory
 {
 
+    /**
+     * @var
+     */
     private $sshPrivKey;
 
+    /**
+     * @var string
+     */
     private $commitUserName = "";
+    /**
+     * @var string
+     */
     private $commitEmail = "";
+    /**
+     * @var string
+     */
     private $gitUser = "";
+    /**
+     * @var string
+     */
     private $gitPassword = "";
 
+    /**
+     * @param string $privateKey
+     */
     public function setAuthSshPrivateKey(string $privateKey)
     {
         $this->sshPrivKey = $privateKey;
     }
 
+    /**
+     * @param $userName
+     * @param $email
+     */
     public function setCommitUser($userName, $email)
     {
         $this->commitUserName = $userName;
         $this->commitEmail = $email;
     }
 
+    /**
+     * @return string
+     * @throws FilesystemException
+     * @throws PhoreExecException
+     */
     public function createSshPublicKey(): string
     {
         $tmpfile = new PhoreTempFile();
@@ -45,6 +77,10 @@ class VcsFactory
         return phore_exec("ssh-keygen -y -f :file", ["file" => $tmpfile->getUri()]);
     }
 
+    /**
+     * @param string $gitUser
+     * @param string $gitPassword
+     */
     public function setGitHttpsAuth(string $gitUser, string $gitPassword)
     {
         $this->gitUser = $gitUser;

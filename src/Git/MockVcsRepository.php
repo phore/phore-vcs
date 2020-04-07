@@ -9,6 +9,7 @@
 namespace Phore\VCS\Git;
 
 
+use Phore\FileSystem\PhoreDirectory;
 use Phore\FileSystem\PhoreFile;
 use Phore\FileSystem\PhoreUri;
 use Phore\ObjectStore\Driver\FileSystemObjectStoreDriver;
@@ -20,7 +21,7 @@ class MockVcsRepository implements VcsRepository
 {
 
     /**
-     * @var \Phore\FileSystem\PhoreDirectory 
+     * @var PhoreDirectory
      */
     private $repoDirectory;
     private $origin;

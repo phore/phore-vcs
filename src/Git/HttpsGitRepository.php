@@ -4,15 +4,24 @@ namespace Phore\VCS\Git;
 
 use InvalidArgumentException;
 use Phore\Core\Exception\InvalidDataException;
+use Phore\FileSystem\Exception\FileAccessException;
+use Phore\FileSystem\Exception\FileNotFoundException;
 use Phore\FileSystem\Exception\FilesystemException;
 use Phore\FileSystem\Exception\PathOutOfBoundsException;
-use Phore\ObjectStore\ObjectStore;
-use Phore\ObjectStore\Type\ObjectStoreObject;
 use Phore\System\PhoreExecException;
 
+/**
+ * Class HttpsGitRepository
+ * @package Phore\VCS\Git
+ */
 class HttpsGitRepository extends GitRepository
 {
-//todo catch password in exception (mask)
+
+    /**
+     * @var
+     */
+    private $gitPassword;
+
     /**
      * HttpsGitRepository constructor.
      * @param string $origin
@@ -24,21 +33,13 @@ class HttpsGitRepository extends GitRepository
      * @throws FilesystemException
      * @throws PathOutOfBoundsException
      */
-    public function __construct(string $origin, string $repoDirectory, string $userName, string $email,string $gitUser, string $gitPassword)
+    public function __construct(string $origin, string $repoDirectory, string $userName, string $email, string $gitUser, string $gitPassword)
     {
-        $origin = substr_replace($origin,"https://$gitUser:$gitPassword@",0,8);
-        parent::__construct($repoDirectory,$userName,$email, $origin);
+
+        $origin = substr_replace($origin, "https://$gitUser:$gitPassword@", 0, 8);
+        parent::__construct($repoDirectory, $userName, $email, $origin);
     }
 
-
-    /**
-     * @return bool
-     * @throws PathOutOfBoundsException
-     */
-    public function exists()
-    {
-        return $this->repoDirectory->withSubPath(".git")->isDirectory();
-    }
 
     /**
      * @param string $message
@@ -58,37 +59,51 @@ class HttpsGitRepository extends GitRepository
         }
     }
 
+    /**
+     * @throws PathOutOfBoundsException
+     * @throws PhoreExecException
+     */
     public function pull()
     {
         if (!$this->exists()) {
-            phore_exec("git clone :origin :target", ["origin" => $this->origin, "target" => $this->repoDirectory]);
+            try {
+                phore_exec("git clone :origin :target", ["origin" => $this->origin, "target" => $this->repoDirectory]);
+            } catch (PhoreExecException $e) {
+                $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+                $e->setMessage($msg);
+                throw $e;
+            }
         }
         phore_exec("git -C :target pull -Xtheirs", ["target" => $this->repoDirectory]);
-        $this->currentPulledVersion = phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
+        try {
+            $this->currentPulledVersion = phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
+        } catch (PhoreExecException $e) {
+            $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+            $e->setMessage($msg);
+            throw $e;
+        }
     }
 
+    /**
+     * @throws PhoreExecException
+     */
     public function push()
     {
-        phore_exec("git -C :target push", ["target" => $this->repoDirectory]);
+        try {
+            phore_exec("git -C :target push", ["target" => $this->repoDirectory]);
+        } catch (PhoreExecException $e) {
+            $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+            $e->setMessage($msg);
+            throw $e;
+        }
     }
 
-    public function getObjectstore(): ObjectStore
-    {
-        return $this->objectStore;
-    }
-
-    public function object(string $name): ObjectStoreObject
-    {
-        return $this->objectStore->object($name);
-    }
-
-    public function setSavepointFile($file)
-    {
-        if (is_string($file))
-            $file = phore_file($file);
-        $this->savepointFile = $file;
-    }
-
+    /**
+     * @return array
+     * @throws PhoreExecException
+     * @throws FileAccessException
+     * @throws FileNotFoundException
+     */
     public function getChangedFiles(): array
     {
         if ($this->savepointFile === null)
@@ -99,31 +114,26 @@ class HttpsGitRepository extends GitRepository
             $lastRev = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"; // <= This is git default for empty tree (before first commit)
         }
         if ($this->currentPulledVersion === null)
-            $this->currentPulledVersion = phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
+            try {
+                $this->currentPulledVersion = phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
+            } catch (PhoreExecException $e) {
+                $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+                $e->setMessage($msg);
+                throw $e;
+            }
 
-        $changedFiles = phore_exec("git -C :target diff --name-status :lastRev..:curRev", [
-            "target" => $this->repoDirectory,
-            "lastRev" => $lastRev,
-            "curRev" => $this->currentPulledVersion
-        ]);
-
-        $changedFiles = explode("\n", $changedFiles);
-
-        $ret = [];
-        foreach ($changedFiles as $curLine) {
-            $curLine = trim($curLine);
-            $skey = substr($curLine, 0, 1);
-            $status = isset (self::GIT_STATUS_MAP[$skey]) ? self::GIT_STATUS_MAP[$skey] : null;
-
-            if ($status === null)
-                continue;
-            $ret[] = [substr($curLine, 0, 1), trim(substr($curLine, 1))];
+        try {
+            $changedFiles = phore_exec("git -C :target diff --name-status :lastRev..:curRev", [
+                "target" => $this->repoDirectory,
+                "lastRev" => $lastRev,
+                "curRev" => $this->currentPulledVersion
+            ]);
+        } catch (PhoreExecException $e) {
+            $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+            $e->setMessage($msg);
+            throw $e;
         }
-        return $ret;
-    }
 
-    public function saveSavepoint()
-    {
-        $this->savepointFile->set_contents($this->currentPulledVersion);
+        return $this->modifyChangedFiles($changedFiles);
     }
 }

@@ -9,36 +9,54 @@
 namespace Phore\VCS\Git;
 
 
-use Phore\ObjectStore\ObjectStore;
-use Phore\ObjectStore\Type\ObjectStoreObject;
+use InvalidArgumentException;
+use Phore\Core\Exception\InvalidDataException;
+use Phore\FileSystem\Exception\FileAccessException;
+use Phore\FileSystem\Exception\FileNotFoundException;
+use Phore\FileSystem\Exception\FilesystemException;
+use Phore\FileSystem\Exception\PathOutOfBoundsException;
+use Phore\System\PhoreExecException;
 
+/**
+ * Class SshGitRepository
+ * @package Phore\VCS\Git
+ */
 class SshGitRepository extends GitRepository
 {
 
+    /**
+     * @var string
+     */
     private $sshKey;
 
 
-
-
+    /**
+     * SshGitRepository constructor.
+     * @param string $origin
+     * @param string $repoDirectory
+     * @param string $userName
+     * @param string $email
+     * @param string|null $sshKey
+     * @throws FilesystemException
+     * @throws PathOutOfBoundsException
+     */
     public function __construct(string $origin, string $repoDirectory, string $userName, string $email, string $sshKey = null)
     {
-        parent::__construct($repoDirectory,$userName,$email, $origin);
+        parent::__construct($repoDirectory, $userName, $email, $origin);
         $this->sshKey = $sshKey;
     }
 
 
-    public function setSavepointFile($file)
-    {
-        if (is_string($file))
-            $file = phore_file($file);
-        $this->savepointFile = $file;
-    }
-
-
+    /**
+     * @return array
+     * @throws FileAccessException
+     * @throws FileNotFoundException
+     * @throws PhoreExecException
+     */
     public function getChangedFiles(): array
     {
         if ($this->savepointFile === null)
-            throw new \InvalidArgumentException("No savepoint file specified. Use setSavepointFile() to select one.");
+            throw new InvalidArgumentException("No savepoint file specified. Use setSavepointFile() to select one.");
 
         $lastRev = $this->savepointFile->get_contents();
         if ($lastRev === "") {
@@ -53,31 +71,31 @@ class SshGitRepository extends GitRepository
             "curRev" => $this->currentPulledVersion
         ]);
 
-        $changedFiles = explode("\n", $changedFiles);
-
-        $ret = [];
-        foreach ($changedFiles as $curLine) {
-            $curLine = trim($curLine);
-            $skey = substr($curLine, 0, 1);
-            $status = isset (self::GIT_STATUS_MAP[$skey]) ? self::GIT_STATUS_MAP[$skey] : null;
-
-            if ($status === null)
-                continue;
-            $ret[] = [substr($curLine, 0, 1), trim(substr($curLine, 1))];
-        }
-        return $ret;
+        return $this->modifyChangedFiles($changedFiles);
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function saveSavepoint()
     {
         $this->savepointFile->set_contents($this->currentPulledVersion);
     }
 
+    /**
+     * @return bool
+     * @throws PathOutOfBoundsException
+     */
     public function exists()
     {
         return $this->repoDirectory->withSubPath(".git")->isDirectory();
     }
 
+    /**
+     * @param string $message
+     * @throws InvalidDataException
+     * @throws PhoreExecException
+     */
     public function commit(string $message)
     {
         phore_assert_str_alnum($this->userName, [".", "-", "_"]);
@@ -91,6 +109,12 @@ class SshGitRepository extends GitRepository
         }
     }
 
+    /**
+     * @param string $command
+     * @param array $params
+     * @return array|string
+     * @throws PhoreExecException
+     */
     private function gitCommand(string $command, array $params)
     {
         $cmd = "";
@@ -105,6 +129,10 @@ class SshGitRepository extends GitRepository
         return phore_exec($cmd, $params);
     }
 
+    /**
+     * @throws PathOutOfBoundsException
+     * @throws PhoreExecException
+     */
     public function pull()
     {
         if (!$this->exists()) {
@@ -114,19 +142,11 @@ class SshGitRepository extends GitRepository
         $this->currentPulledVersion = $this->gitCommand("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
     }
 
+    /**
+     * @throws PhoreExecException
+     */
     public function push()
     {
         $this->gitCommand("git -C :target push", ["target" => $this->repoDirectory]);
-    }
-
-
-    public function getObjectstore(): ObjectStore
-    {
-        return $this->objectStore;
-    }
-
-    public function object(string $name): ObjectStoreObject
-    {
-        return $this->objectStore->object($name);
     }
 }

@@ -7,11 +7,16 @@ namespace Phore\VCS\Git;
 use Phore\FileSystem\Exception\FilesystemException;
 use Phore\FileSystem\Exception\PathOutOfBoundsException;
 use Phore\FileSystem\PhoreDirectory;
+use Phore\FileSystem\PhoreFile;
 use Phore\ObjectStore\Driver\FileSystemObjectStoreDriver;
 use Phore\ObjectStore\ObjectStore;
 use Phore\ObjectStore\Type\ObjectStoreObject;
 use Phore\VCS\VcsRepository;
 
+/**
+ * Class GitRepository
+ * @package Phore\VCS\Git
+ */
 abstract class GitRepository implements VcsRepository
 {
     /**
@@ -35,12 +40,18 @@ abstract class GitRepository implements VcsRepository
      */
     protected $objectStore;
     /**
-     * @var string
+     * @var PhoreFile
      */
     protected $savepointFile = null;
 
+    /**
+     * @var null
+     */
     protected $currentPulledVersion = null;
 
+    /**
+     *
+     */
     protected const GIT_STATUS_MAP = [
         "M" => self::STAT_MODIFY,
         "A" => self::STAT_CREATE,
@@ -73,21 +84,35 @@ abstract class GitRepository implements VcsRepository
         }
     }
 
+    /**
+     * @return bool
+     * @throws PathOutOfBoundsException
+     */
     public function exists()
     {
         return $this->repoDirectory->withSubPath(".git")->isDirectory();
     }
 
+    /**
+     * @return ObjectStore
+     */
     public function getObjectstore(): ObjectStore
     {
         return $this->objectStore;
     }
 
+    /**
+     * @param string $name
+     * @return ObjectStoreObject
+     */
     public function object(string $name): ObjectStoreObject
     {
         return $this->objectStore->object($name);
     }
 
+    /**
+     * @param $file
+     */
     public function setSavepointFile($file)
     {
         if (is_string($file))
@@ -95,8 +120,32 @@ abstract class GitRepository implements VcsRepository
         $this->savepointFile = $file;
     }
 
+    /**
+     * @throws FilesystemException
+     */
     public function saveSavepoint()
     {
         $this->savepointFile->set_contents($this->currentPulledVersion);
+    }
+
+    /**
+     * @param $changedFiles
+     * @return array
+     */
+    protected function modifyChangedFiles($changedFiles): array
+    {
+        $changedFiles = explode("\n", $changedFiles);
+
+        $ret = [];
+        foreach ($changedFiles as $curLine) {
+            $curLine = trim($curLine);
+            $skey = substr($curLine, 0, 1);
+            $status = isset (GitRepository::GIT_STATUS_MAP[$skey]) ? GitRepository::GIT_STATUS_MAP[$skey] : null;
+
+            if ($status === null)
+                continue;
+            $ret[] = [substr($curLine, 0, 1), trim(substr($curLine, 1))];
+        }
+        return $ret;
     }
 }
