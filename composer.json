@@ -18,14 +18,14 @@
   },
   "require": {
     "php" : ">=7.2",
-    "phore/system": "dev-master",
     "ext-json": "*",
     "ext-yaml": "*",
-    "phore/objectstore": "dev-master",
-    "phore/filesystem": "dev-master"
+    "phore/core": "*",
+    "phore/system": "*",
+    "phore/objectstore": "*",
+    "phore/filesystem": "*"
   },
   "require-dev": {
-    "phore/theme-coreui": "dev-master",
     "phpunit/phpunit": "^7"
   },
   "suggest": {
