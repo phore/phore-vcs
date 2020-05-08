@@ -106,9 +106,43 @@ class VcsFactory
             return new MockVcsRepository($matches[1], $targetPath);
         }
         if (preg_match("/^[a-z0-9_\-]+@[a-z0-9\-\.]+\:.*$/", $repoUrl)) {
+            $opts = phore_parse_url($repoUrl);
+
+            // Load the key from file
+            $sshKeyFile = $opts->getQueryVal("ssh_priv_key_file", null);
+            if ($sshKeyFile !== null) {
+                $this->sshPrivKey = phore_file($sshKeyFile)->get_contents();
+            }
+
+            // Load the key directly from parameter
+            $sshKey = $opts->getQueryVal("ssh_priv_key", null);
+            if ($sshKeyFile !== null) {
+                $this->sshPrivKey = $sshKey;
+            }
+
             return new SshGitRepository($repoUrl, $targetPath, $this->commitUserName, $this->commitEmail, $this->sshPrivKey);
         }
         if (preg_match("/^https.*$/", $repoUrl)) {
+            $opts = phore_parse_url($repoUrl);
+
+            // Load the key from file
+            $authUser = $opts->getQueryVal("auth_user", null);
+            if ($authUser !== null) {
+                $this->gitUser = phore_file($authUser)->get_contents();
+            }
+
+            // Load the key directly from file
+            $passFile = $opts->getQueryVal("auth_pass_file", null);
+            if ($passFile !== null) {
+                $this->gitPassword = phore_file($passFile)->get_contents();
+            }
+
+            // Load the key directly from parameter
+            $pass = $opts->getQueryVal("auth_pass", null);
+            if ($pass !== null) {
+                $this->gitPassword = $pass;
+            }
+
             return new HttpsGitRepository($repoUrl, $targetPath, $this->commitUserName, $this->commitEmail, $this->gitUser,$this->gitPassword);
         }
         throw new InvalidArgumentException("Cannot determine repository type: $repoUrl");
