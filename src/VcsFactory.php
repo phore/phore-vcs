@@ -116,7 +116,7 @@ class VcsFactory
 
             // Load the key directly from parameter
             $sshKey = $opts->getQueryVal("ssh_priv_key", null);
-            if ($sshKeyFile !== null) {
+            if ($sshKey !== null) {
                 $this->sshPrivKey = $sshKey;
             }
 
