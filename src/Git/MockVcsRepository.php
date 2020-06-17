@@ -45,7 +45,12 @@ class MockVcsRepository implements VcsRepository
     {
         
     }
-    
+
+    public function getOrigin() : string
+    {
+        return $this->origin;
+    }
+
 
     public function pull()
     {

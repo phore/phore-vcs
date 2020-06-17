@@ -84,6 +84,13 @@ abstract class GitRepository implements VcsRepository
         }
     }
 
+
+    public function getOrigin() : string
+    {
+        return $this->origin;
+    }
+
+
     /**
      * @return bool
      * @throws PathOutOfBoundsException

@@ -10,3 +10,5 @@ command:
     - "composer update"
 
 
+  test:
+    - "phpunit test"

@@ -35,6 +35,8 @@ interface VcsRepository
 
     public function setSavepointFile($file);
 
+    public function getOrigin() : string;
+
 
     public function getChangedFiles() : array;
 
