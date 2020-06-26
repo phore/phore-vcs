@@ -79,7 +79,8 @@ class HttpsGitRepository extends GitRepository
             try {
                 phore_exec("git clone :origin :target", ["origin" => $this->origin, "target" => $this->repoDirectory]);
             } catch (PhoreExecException $e) {
-                $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+                $msg = str_replace(urlencode($this->gitPassword), "[MASKED]", $e->getMessage());
+                $msg = str_replace(urlencode($this->gitUser), "[MASKED]", $msg);
                 $e->setMessage($msg);
                 throw $e;
             }
@@ -88,8 +89,8 @@ class HttpsGitRepository extends GitRepository
         try {
             $this->currentPulledVersion = phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
         } catch (PhoreExecException $e) {
-            $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
-            $msg = str_replace($this->gitUser, "[MASKED]", $msg);
+            $msg = str_replace(urlencode($this->gitPassword), "[MASKED]", $e->getMessage());
+            $msg = str_replace(urlencode($this->gitUser), "[MASKED]", $msg);
             $e->setMessage($msg);
             throw $e;
         }
@@ -103,8 +104,8 @@ class HttpsGitRepository extends GitRepository
         try {
             phore_exec("git -C :target push", ["target" => $this->repoDirectory]);
         } catch (PhoreExecException $e) {
-            $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
-            $msg = str_replace($this->gitUser, "[MASKED]", $msg);
+            $msg = str_replace(urlencode($this->gitPassword), "[MASKED]", $e->getMessage());
+            $msg = str_replace(urlencode($this->gitUser), "[MASKED]", $msg);
             $e->setMessage($msg);
             throw $e;
         }
@@ -129,8 +130,8 @@ class HttpsGitRepository extends GitRepository
             try {
                 $this->currentPulledVersion = phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
             } catch (PhoreExecException $e) {
-                $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
-                $msg = str_replace($this->gitUser, "[MASKED]", $msg);
+                $msg = str_replace(urlencode($this->gitPassword), "[MASKED]", $e->getMessage());
+                $msg = str_replace(urlencode($this->gitUser), "[MASKED]", $msg);
                 $e->setMessage($msg);
                 throw $e;
             }
@@ -142,8 +143,8 @@ class HttpsGitRepository extends GitRepository
                 "curRev" => $this->currentPulledVersion
             ]);
         } catch (PhoreExecException $e) {
-            $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
-            $msg = str_replace($this->gitUser, "[MASKED]", $msg);
+            $msg = str_replace(urlencode($this->gitPassword), "[MASKED]", $e->getMessage());
+            $msg = str_replace(urlencode($this->gitUser), "[MASKED]", $msg);
             $e->setMessage($msg);
             throw $e;
         }
