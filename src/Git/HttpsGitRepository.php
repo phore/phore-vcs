@@ -22,6 +22,8 @@ class HttpsGitRepository extends GitRepository
      */
     private $gitPassword;
 
+    private $gitUser;
+
     /**
      * HttpsGitRepository constructor.
      * @param string $origin
@@ -36,10 +38,14 @@ class HttpsGitRepository extends GitRepository
     public function __construct(string $origin, string $repoDirectory, string $userName, string $email, string $gitUser, string $gitPassword)
     {
         $this->gitPassword = $gitPassword;
+        $this->gitUser = $gitUser;
 
         $url = phore_parse_url($origin);
-        if ( ! empty($gitUser) || !empty($gitPassword))
-        $url = $url->withUserPass($gitUser, $gitPassword);
+        if ( ! empty($gitUser) || !empty($gitPassword)) {
+            $url = $url->withUserPass($gitUser, $gitPassword);
+        }
+        $this->gitPassword = $url->pass;
+        $this->gitUser = $url->user;
 
         parent::__construct((string)$url, $repoDirectory, $userName, $email);
     }
@@ -83,6 +89,7 @@ class HttpsGitRepository extends GitRepository
             $this->currentPulledVersion = phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
         } catch (PhoreExecException $e) {
             $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+            $msg = str_replace($this->gitUser, "[MASKED]", $msg);
             $e->setMessage($msg);
             throw $e;
         }
@@ -97,6 +104,7 @@ class HttpsGitRepository extends GitRepository
             phore_exec("git -C :target push", ["target" => $this->repoDirectory]);
         } catch (PhoreExecException $e) {
             $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+            $msg = str_replace($this->gitUser, "[MASKED]", $msg);
             $e->setMessage($msg);
             throw $e;
         }
@@ -122,6 +130,7 @@ class HttpsGitRepository extends GitRepository
                 $this->currentPulledVersion = phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
             } catch (PhoreExecException $e) {
                 $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+                $msg = str_replace($this->gitUser, "[MASKED]", $msg);
                 $e->setMessage($msg);
                 throw $e;
             }
@@ -134,6 +143,7 @@ class HttpsGitRepository extends GitRepository
             ]);
         } catch (PhoreExecException $e) {
             $msg = str_replace($this->gitPassword, "[MASKED]", $e->getMessage());
+            $msg = str_replace($this->gitUser, "[MASKED]", $msg);
             $e->setMessage($msg);
             throw $e;
         }
