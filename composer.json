@@ -21,12 +21,12 @@
     "ext-json": "*",
     "ext-yaml": "*",
     "phore/core": "*",
-    "phore/system": "*",
-    "phore/objectstore": "*",
-    "phore/filesystem": "*"
+    "phore/system": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "*"
+    "phpunit/phpunit": "*",
+    "phore/objectstore": "*",
+    "phore/filesystem": "*"
   },
   "suggest": {
   },
