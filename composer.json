@@ -27,8 +27,6 @@
   },
   "require-dev": {
     "phpunit/phpunit": "*"
-
-
   },
   "suggest": {
   },
