@@ -27,7 +27,6 @@
   "require-dev": {
     "phpunit/phpunit": "*",
     "phore/objectstore": "*"
-
   },
   "suggest": {
   },
