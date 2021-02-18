@@ -195,8 +195,8 @@ abstract class GitRepository implements VcsRepository
      */
     public function commit(string $message)
     {
-        phore_assert_str_alnum($this->userName, [".", "-", "_"]);
-        phore_assert_str_alnum($this->email, ["@", ".", "-", "_"]);
+        phore_assert_str_alnum($this->userName, [".", "-", "_", ""], new \InvalidArgumentException("git userName is not alphanumeric"));
+        phore_assert_str_alnum($this->email, ["@", ".", "-", "_"], new \InvalidArgumentException("git email is not alphanumeric"));
         phore_exec("git -C :target add .", ["target" => $this->repoDirectory]);
 
         $ret = phore_exec("git -C :target diff --name-only --cached", ["target" => $this->repoDirectory]);
