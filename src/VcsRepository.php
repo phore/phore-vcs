@@ -48,4 +48,7 @@ interface VcsRepository
 
     public function saveSavepoint();
 
+    public function getLocalRepoPath() : string;
+
+
 }
