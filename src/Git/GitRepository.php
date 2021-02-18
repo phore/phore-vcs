@@ -208,6 +208,6 @@ abstract class GitRepository implements VcsRepository
 
     public function getRev(): string
     {
-        return phore_exec("git -C :target rev-parse HEAD");
+        return phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
     }
 }
