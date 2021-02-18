@@ -4,6 +4,9 @@
 namespace Phore\VCS\Git;
 
 
+use Phore\Core\Exception\InvalidDataException;
+use Phore\FileSystem\Exception\FileAccessException;
+use Phore\FileSystem\Exception\FileNotFoundException;
 use Phore\FileSystem\Exception\FilesystemException;
 use Phore\FileSystem\Exception\PathOutOfBoundsException;
 use Phore\FileSystem\PhoreDirectory;
@@ -11,6 +14,7 @@ use Phore\FileSystem\PhoreFile;
 use Phore\ObjectStore\Driver\FileSystemObjectStoreDriver;
 use Phore\ObjectStore\ObjectStore;
 use Phore\ObjectStore\Type\ObjectStoreObject;
+use Phore\System\PhoreExecException;
 use Phore\VCS\VcsRepository;
 
 /**
@@ -154,5 +158,56 @@ abstract class GitRepository implements VcsRepository
             $ret[] = [substr($curLine, 0, 1), trim(substr($curLine, 1))];
         }
         return $ret;
+    }
+
+
+    /**
+     * @return array
+     * @throws FileAccessException
+     * @throws FileNotFoundException
+     * @throws PhoreExecException
+     */
+    public function getChangedFiles(): array
+    {
+        if ($this->savepointFile === null)
+            throw new InvalidArgumentException("No savepoint file specified. Use setSavepointFile() to select one.");
+
+        $lastRev = $this->savepointFile->get_contents();
+        if ($lastRev === "") {
+            $lastRev = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"; // <= This is git default for empty tree (before first commit)
+        }
+        if ($this->currentPulledVersion === null)
+            $this->currentPulledVersion = $this->gitCommand("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
+
+        $changedFiles = $this->gitCommand("git -C :target diff --name-status :lastRev..:curRev", [
+            "target" => $this->repoDirectory,
+            "lastRev" => $lastRev,
+            "curRev" => $this->currentPulledVersion
+        ]);
+
+        return $this->modifyChangedFiles($changedFiles);
+    }
+
+    /**
+     * @param string $message
+     * @throws InvalidDataException
+     * @throws PhoreExecException
+     */
+    public function commit(string $message)
+    {
+        phore_assert_str_alnum($this->userName, [".", "-", "_"]);
+        phore_assert_str_alnum($this->email, ["@", ".", "-", "_"]);
+        phore_exec("git -C :target add .", ["target" => $this->repoDirectory]);
+
+        $ret = phore_exec("git -C :target diff --name-only --cached", ["target" => $this->repoDirectory]);
+        // commit only if files changed.
+        if (trim($ret) !== "") {
+            phore_exec("git -C :target -c 'user.name={$this->userName}' -c 'user.email={$this->email}' commit -m :msg ", ["target" => $this->repoDirectory, "msg" => $message]);
+        }
+    }
+
+    public function getRev(): string
+    {
+        return phore_exec("git -C :target rev-parse HEAD");
     }
 }

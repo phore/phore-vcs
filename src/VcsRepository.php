@@ -37,6 +37,12 @@ interface VcsRepository
 
     public function getOrigin() : string;
 
+    /**
+     * Return the Revison (hash) of current HEAD
+     * 
+     * @return string
+     */
+    public function getRev() : string;
 
     public function getChangedFiles() : array;
 

@@ -45,52 +45,7 @@ class SshGitRepository extends GitRepository
         parent::__construct($origin, $repoDirectory, $userName, $email);
         $this->sshKey = $sshKey;
     }
-
-
-    /**
-     * @return array
-     * @throws FileAccessException
-     * @throws FileNotFoundException
-     * @throws PhoreExecException
-     */
-    public function getChangedFiles(): array
-    {
-        if ($this->savepointFile === null)
-            throw new InvalidArgumentException("No savepoint file specified. Use setSavepointFile() to select one.");
-
-        $lastRev = $this->savepointFile->get_contents();
-        if ($lastRev === "") {
-            $lastRev = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"; // <= This is git default for empty tree (before first commit)
-        }
-        if ($this->currentPulledVersion === null)
-            $this->currentPulledVersion = $this->gitCommand("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
-
-        $changedFiles = $this->gitCommand("git -C :target diff --name-status :lastRev..:curRev", [
-            "target" => $this->repoDirectory,
-            "lastRev" => $lastRev,
-            "curRev" => $this->currentPulledVersion
-        ]);
-
-        return $this->modifyChangedFiles($changedFiles);
-    }
-
-    /**
-     * @param string $message
-     * @throws InvalidDataException
-     * @throws PhoreExecException
-     */
-    public function commit(string $message)
-    {
-        phore_assert_str_alnum($this->userName, [".", "-", "_"]);
-        phore_assert_str_alnum($this->email, ["@", ".", "-", "_"]);
-        $this->gitCommand("git -C :target add .", ["target" => $this->repoDirectory]);
-
-        $ret = $this->gitCommand("git -C :target diff --name-only --cached", ["target" => $this->repoDirectory]);
-        // commit only if files changed.
-        if (trim($ret) !== "") {
-            $this->gitCommand("git -C :target -c 'user.name={$this->userName}' -c 'user.email={$this->email}' commit -m :msg ", ["target" => $this->repoDirectory, "msg" => $message]);
-        }
-    }
+    
 
     /**
      * @param string $command
