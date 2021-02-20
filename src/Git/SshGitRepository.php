@@ -45,7 +45,23 @@ class SshGitRepository extends GitRepository
         parent::__construct($origin, $repoDirectory, $userName, $email);
         $this->sshKey = $sshKey;
     }
-    
+
+
+    /**
+     * Set the ssh private key or specify a file to load it from
+     *
+     * @param string $sshPrivateKey
+     */
+    public function setSshPrivateKey(string $sshPrivateKey)
+    {
+        if (preg_match("|^file:(.*)$|", $sshPrivateKey, $matches)) {
+            $keyFile = $matches[1];
+            if ( ! is_file($keyFile) || ! is_readable($keyFile))
+                throw new InvalidArgumentException("Ssh Keyfile '$keyFile' is not readable");
+            $sshPrivateKey = file_get_contents($keyFile);
+        }
+        $this->setSshPrivateKey = $sshPrivateKey;
+    }
 
     /**
      * @param string $command
