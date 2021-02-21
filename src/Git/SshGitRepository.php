@@ -60,7 +60,7 @@ class SshGitRepository extends GitRepository
                 throw new InvalidArgumentException("Ssh Keyfile '$keyFile' is not readable");
             $sshPrivateKey = file_get_contents($keyFile);
         }
-        $this->setSshPrivateKey = $sshPrivateKey;
+        $this->sshKey = $sshPrivateKey;
     }
 
     /**
