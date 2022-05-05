@@ -92,7 +92,7 @@ class SshGitRepository extends GitRepository
         if (!$this->exists()) {
             $this->gitCommand("git clone :origin :target", ["origin" => $this->origin, "target" => $this->repoDirectory]);
         }
-        $this->gitCommand("git -C :target pull -s recursive -X theirs", ["target" => $this->repoDirectory]);
+        $this->gitCommand("git -C :target pull -s recursive -X theirs --ff", ["target" => $this->repoDirectory]);
         $this->currentPulledVersion = $this->gitCommand("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
     }
 
