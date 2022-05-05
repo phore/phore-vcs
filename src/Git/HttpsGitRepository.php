@@ -69,7 +69,7 @@ class HttpsGitRepository extends GitRepository
                 throw $e;
             }
         }
-        phore_exec("git -C :target pull -Xtheirs", ["target" => $this->repoDirectory]);
+        phore_exec("git -C :target pull -Xours", ["target" => $this->repoDirectory]);
         try {
             $this->currentPulledVersion = phore_exec("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
         } catch (PhoreExecException $e) {
