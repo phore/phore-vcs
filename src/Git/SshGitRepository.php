@@ -89,10 +89,12 @@ class SshGitRepository extends GitRepository
      */
     public function pull()
     {
+        phore_assert_str_alnum($this->userName, [".", "-", "_", ""], new \InvalidArgumentException("git userName is not alphanumeric"));
+        phore_assert_str_alnum($this->email, ["@", ".", "-", "_"], new \InvalidArgumentException("git email is not alphanumeric"));
         if (!$this->exists()) {
             $this->gitCommand("git clone :origin :target", ["origin" => $this->origin, "target" => $this->repoDirectory]);
         }
-        $this->gitCommand("git -C :target pull -s recursive -X theirs --ff", ["target" => $this->repoDirectory]);
+        $this->gitCommand("git -C :target pull -s recursive -X theirs --ff -c 'user.name={$this->userName}' -c 'user.email={$this->email}'", ["target" => $this->repoDirectory]);
         $this->currentPulledVersion = $this->gitCommand("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
     }
 
