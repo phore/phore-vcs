@@ -92,7 +92,7 @@ class SshGitRepository extends GitRepository
         if (!$this->exists()) {
             $this->gitCommand("git clone :origin :target", ["origin" => $this->origin, "target" => $this->repoDirectory]);
         }
-        $this->gitCommand("git -C :target pull -Xtheirs", ["target" => $this->repoDirectory]);
+        $this->gitCommand("git -C :target pull -Xours", ["target" => $this->repoDirectory]);
         $this->currentPulledVersion = $this->gitCommand("git -C :target rev-parse HEAD", ["target" => $this->repoDirectory]);
     }
 
@@ -101,6 +101,6 @@ class SshGitRepository extends GitRepository
      */
     public function push()
     {
-        $this->gitCommand("git -C :target push", ["target" => $this->repoDirectory]);
+        $this->gitCommand("git -C :target push -Xours", ["target" => $this->repoDirectory]);
     }
 }
